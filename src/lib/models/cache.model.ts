@@ -19,6 +19,7 @@ const cacheSchema: Schema = new Schema({
   ttl: {
     type: Date,
     required: true,
+    index: true,
   },
   createdAt: {
     type: Date,

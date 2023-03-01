@@ -1,4 +1,4 @@
-import express, { Express } from "express";
+import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -8,6 +8,8 @@ import { Controller } from "./controller/controller";
 interface AppConfig {
   port: number;
   databaseUri: string;
+  cacheExpiry: number;
+  maxEntries: number;
 }
 
 class App {
@@ -32,16 +34,23 @@ class App {
   }
 
   static loadConfig(): AppConfig {
-    const port = Number(process.env.PORT) ?? 3000;
+    const port = process.env.PORT ? Number(process.env.PORT) : 4000;
     const databaseUri =
       process.env.DATABASE_URI ?? "mongodb://localhost:27017/cache";
-    return { port, databaseUri };
+    const cacheExpiry = process.env.CACHE_EXPIRY
+      ? Number(process.env.CACHE_EXPIRY)
+      : 600000;
+    const maxEntries = process.env.MAX_ENTRIES
+      ? Number(process.env.MAX_ENTRIES)
+      : 100;
+    return { port, databaseUri, cacheExpiry, maxEntries };
   }
 
   public start(): void {
     this.server.listen(this.config.port, () => {
       console.log(`Server started at http://localhost:${this.config.port}`);
     });
+    console.log("Server up & running", this.config);
   }
 
   private initMiddleware(): void {
@@ -53,7 +62,13 @@ class App {
   }
 
   private initRoutes(): void {
-    const cacheController = new Controller();
+    this.server.get("/", (req: Request, res: Response) => {
+      res.send("Server up & running ");
+    });
+    const cacheController = new Controller({
+      cacheExpiry: this.config.cacheExpiry,
+      maxEntries: this.config.maxEntries,
+    });
     const router = new AppRouter(cacheController).router;
     this.server.use("/cache", router);
   }

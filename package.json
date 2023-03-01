@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run clean && tsc",
-    "clean": "rm -rf dist",
-    "start": "npm run build && node dist/bin/start",
+    "clean": "rimraf dist && rimraf tsconfig.tsbuildinfo",
+    "start": "npm run build && node dist/bin/start.js",
     "dev": "nodemon src/bin/start.ts"
   },
   "author": "Ahmad Faraz",
@@ -25,6 +25,7 @@
     "express": "^4.18.2",
     "mongodb": "^5.1.0",
     "mongoose": "^6.10.0",
+    "rimraf": "^4.1.2",
     "typescript": "^4.9.5"
   }
 }
