@@ -1,0 +1,101 @@
+openapi: 3.0.0
+info:
+  title: Cache API
+  description: API for Cache Application
+  version: 1.0.0
+
+paths:
+  /:
+    get:
+      summary: Check if the server is up and running
+      responses:
+        "200":
+          description: The server is up and running
+
+  /cache:
+    get:
+      summary: Get all cache keys
+      responses:
+        "200":
+          description: An array of all cache keys
+
+    put:
+      summary: Create or update a cache key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                  example: "key"
+              required:
+                - key
+        required: true
+      responses:
+        "200":
+          description: The cache key was successfully created or updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    example: "mkey"
+                  value:
+                    type: string
+                    example: "mValue"
+        "500":
+          description: Internal server error
+    delete:
+      summary: Delete all cache keys
+      responses:
+        "204":
+          description: All cache keys were successfully deleted
+        "500":
+          description: Internal server error
+
+  /cache/{key}:
+    get:
+      summary: Get the value of a cache key
+      parameters:
+        - in: path
+          name: key
+          schema:
+            type: string
+          required: true
+          description: The key of the cache to retrieve
+      responses:
+        "200":
+          description: The value of the cache key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    example: "mValue"
+        "404":
+          description: The cache key was not found
+        "500":
+          description: Internal server error
+
+    delete:
+      summary: Delete a cache key
+      parameters:
+        - in: path
+          name: key
+          schema:
+            type: string
+          required: true
+          description: The key of the cache to delete
+      responses:
+        "204":
+          description: The cache key was successfully deleted
+        "404":
+          description: The cache key was not found
+        "500":
+          description: Internal server error

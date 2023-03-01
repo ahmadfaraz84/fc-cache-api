@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Cache, ICache } from "../models/cache.model";
+import HttpStatusCodes from "../utils/httpStatusCodes";
 
 interface CacheConfig {
   timeToLive: number;
@@ -16,9 +17,11 @@ export class Controller {
   getAllCacheKeys = async (req: Request, res: Response): Promise<void> => {
     try {
       const caches = await Cache.find({}, { key: 1 });
-      res.status(200).json(caches.map((cache) => cache.key));
+      res.status(HttpStatusCodes.OK).json(caches.map((cache) => cache.key));
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: err.message });
     }
   };
 
@@ -30,15 +33,19 @@ export class Controller {
         console.log("Cache hit");
         cache.ttl = new Date(Date.now() + this.config.timeToLive); // Reset TTL on cache hit
         await cache.save();
-        res.status(200).json({ value: cache.value });
+        res.status(HttpStatusCodes.OK).json({ value: cache.value });
       } else {
         console.log("Cache miss");
         const value = this.generateRandomString(10);
         const newCache = await this.createCache(key, value);
-        res.status(201).json({ key: newCache.key, value: newCache.value });
+        res
+          .status(HttpStatusCodes.CREATED)
+          .json({ key: newCache.key, value: newCache.value });
       }
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: err.message });
     }
   };
 
@@ -46,18 +53,22 @@ export class Controller {
     try {
       const key = req.params.key;
       await Cache.deleteOne({ key });
-      res.status(204).end();
+      res.status(HttpStatusCodes.NO_CONTENT).end();
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: err.message });
     }
   };
 
   removeAllCache = async (req: Request, res: Response): Promise<void> => {
     try {
       await Cache.deleteMany({});
-      res.status(204).end();
+      res.status(HttpStatusCodes.NO_CONTENT).end();
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: err.message });
     }
   };
 
@@ -70,14 +81,20 @@ export class Controller {
         cache.value = value;
         cache.ttl = new Date(Date.now() + this.config.timeToLive);
         await cache.save();
-        res.status(200).json({ key: cache.key, value: cache.value });
+        res
+          .status(HttpStatusCodes.OK)
+          .json({ key: cache.key, value: cache.value });
       } else {
         const newCache = await this.createCache(key, value);
-        res.status(201).json({ key: newCache.key, value: newCache.value });
+        res
+          .status(HttpStatusCodes.CREATED)
+          .json({ key: newCache.key, value: newCache.value });
       }
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: err.message });
+      res
+        .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
     }
   };
 

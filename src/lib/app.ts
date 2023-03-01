@@ -5,6 +5,10 @@ import dotenv from "dotenv";
 import { AppRouter } from "./routes/route";
 dotenv.config();
 import { Controller } from "./controller/controller";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsDoc from "swagger-jsdoc";
+import HttpStatusCodes from "./utils/httpStatusCodes";
+
 interface AppConfig {
   port: number;
   databaseUri: string;
@@ -23,17 +27,18 @@ class App {
     this.initMiddleware();
     this.initRoutes();
     this.connectDb();
+    this.initSwagger();
   }
 
-  public static getInstance(): App {
+  public static getInstance = (): App => {
     if (!App.instance) {
       const config = this.loadConfig();
       App.instance = new App(config);
     }
     return App.instance;
-  }
+  };
 
-  static loadConfig(): AppConfig {
+  static loadConfig = (): AppConfig => {
     const port = process.env.PORT ? Number(process.env.PORT) : 4000;
     const databaseUri =
       process.env.DATABASE_URI ?? "mongodb://localhost:27017/cache";
@@ -44,26 +49,26 @@ class App {
       ? Number(process.env.MAX_ENTRIES)
       : 100;
     return { port, databaseUri, timeToLive, maxEntries };
-  }
+  };
 
-  public start(): void {
+  public start = (): void => {
     this.server.listen(this.config.port, () => {
       console.log(`Server started at http://localhost:${this.config.port}`);
     });
     console.log("Server up & running", this.config);
-  }
+  };
 
-  private initMiddleware(): void {
+  private initMiddleware = (): void => {
     this.server.use(express.json());
     this.server.use(cors());
     this.server.set("X-Powered-By", false);
     this.server.set("name", "Cache API");
     this.server.set("version", "1.0.0");
-  }
+  };
 
-  private initRoutes(): void {
+  private initRoutes = (): void => {
     this.server.get("/", (req: Request, res: Response) => {
-      res.send("Server up & running ");
+      res.status(HttpStatusCodes.OK).send("Server up & running ");
     });
     const cacheController = new Controller({
       timeToLive: this.config.timeToLive,
@@ -71,9 +76,9 @@ class App {
     });
     const router = new AppRouter(cacheController).router;
     this.server.use("/cache", router);
-  }
+  };
 
-  private connectDb(): void {
+  private connectDb = (): void => {
     mongoose.set("strictQuery", true);
     mongoose
       .connect(this.config.databaseUri)
@@ -84,7 +89,23 @@ class App {
         console.error("Database connection error:", err);
         process.exit(1);
       });
-  }
+  };
+
+  private initSwagger = (): void => {
+    const swaggerOptions = {
+      swaggerDefinition: {
+        openapi: "3.0.0",
+        info: {
+          title: "Cache API",
+          version: "1.0.0",
+          description: "API for caching data",
+        },
+      },
+      apis: ["./src/lib/swagger/swagger-docs.yaml"],
+    };
+    const swaggerDocs = swaggerJsDoc(swaggerOptions);
+    this.server.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+  };
 }
 
 export default App.getInstance();
