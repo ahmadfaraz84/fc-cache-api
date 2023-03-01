@@ -14,5 +14,6 @@ export class AppRouter {
     this.router.get("/", cacheController.getAllCacheKeys);
     this.router.delete("/:key", cacheController.removeCacheByKey);
     this.router.delete("/", cacheController.removeAllCache);
+    this.router.put("/", cacheController.createOrUpdateCache);
   }
 }

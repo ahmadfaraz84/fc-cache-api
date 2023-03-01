@@ -8,7 +8,7 @@ import { Controller } from "./controller/controller";
 interface AppConfig {
   port: number;
   databaseUri: string;
-  cacheExpiry: number;
+  timeToLive: number;
   maxEntries: number;
 }
 
@@ -37,13 +37,13 @@ class App {
     const port = process.env.PORT ? Number(process.env.PORT) : 4000;
     const databaseUri =
       process.env.DATABASE_URI ?? "mongodb://localhost:27017/cache";
-    const cacheExpiry = process.env.CACHE_EXPIRY
-      ? Number(process.env.CACHE_EXPIRY)
+    const timeToLive = process.env.TIME_TO_LIVE
+      ? Number(process.env.TIME_TO_LIVE)
       : 600000;
     const maxEntries = process.env.MAX_ENTRIES
       ? Number(process.env.MAX_ENTRIES)
       : 100;
-    return { port, databaseUri, cacheExpiry, maxEntries };
+    return { port, databaseUri, timeToLive, maxEntries };
   }
 
   public start(): void {
@@ -66,7 +66,7 @@ class App {
       res.send("Server up & running ");
     });
     const cacheController = new Controller({
-      cacheExpiry: this.config.cacheExpiry,
+      timeToLive: this.config.timeToLive,
       maxEntries: this.config.maxEntries,
     });
     const router = new AppRouter(cacheController).router;
