@@ -105,6 +105,7 @@ export class Controller {
     const count = await Cache.countDocuments();
     if (count >= maxEntries) {
       // If the limit is exceeded, find the oldest cache item and overwrite it
+      // oldest cache item is the one with the smallest TTL
       const oldestCache = await Cache.findOne().sort({ ttl: 1 });
       if (oldestCache) {
         oldestCache.key = key;

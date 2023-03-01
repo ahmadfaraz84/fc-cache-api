@@ -8,12 +8,14 @@ import { Controller } from "./controller/controller";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsDoc from "swagger-jsdoc";
 import HttpStatusCodes from "./utils/httpStatusCodes";
+import { startCronJob } from "./service/clear-cache-cronjob";
 
 interface AppConfig {
   port: number;
   databaseUri: string;
   timeToLive: number;
   maxEntries: number;
+  jobInterval: string;
 }
 
 class App {
@@ -48,14 +50,15 @@ class App {
     const maxEntries = process.env.MAX_ENTRIES
       ? Number(process.env.MAX_ENTRIES)
       : 100;
-    return { port, databaseUri, timeToLive, maxEntries };
+    const jobInterval = process.env.JOB_INTERVAL ?? "* * * * *";
+    return { port, databaseUri, timeToLive, maxEntries, jobInterval };
   };
 
   public start = (): void => {
     this.server.listen(this.config.port, () => {
       console.log(`Server started at http://localhost:${this.config.port}`);
     });
-    console.log("Server up & running", this.config);
+    startCronJob(this.config.jobInterval);
   };
 
   private initMiddleware = (): void => {

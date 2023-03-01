@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Cache API
-  description: API for Cache Application
+  description: A REST API for caching data.
   version: 1.0.0
 
 paths:
